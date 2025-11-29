@@ -25,9 +25,29 @@ memref.global "private" @matB_signed : memref<8x4xi8> = dense<[
   [1, -1, 1, -1]
 ]>
 
+memref.global "private" @matA_unsigned : memref<4x8xui8> = dense<[
+  [1, 2, 3, 4, 5, 6, 7, 8],
+  [1, 2, 3, 4, 5, 6, 7, 8],
+  [1, 2, 3, 4, 5, 6, 7, 8],
+  [1, 2, 3, 4, 5, 6, 7, 8]
+]>
+
+memref.global "private" @matB_unsigned : memref<8x4xui8> = dense<[
+  [1, 1, 1, 1],
+  [1, 1, 1, 1],
+  [1, 1, 1, 1],
+  [1, 1, 1, 1],
+  [1, 1, 1, 1],
+  [1, 1, 1, 1],
+  [1, 1, 1, 1],
+  [1, 1, 1, 1]
+]>
+
 func.func @main() -> i32 {
   %a_signed = memref.get_global @matA_signed : memref<4x8xi8>
   %b_signed = memref.get_global @matB_signed : memref<8x4xi8>
+  %a_unsigned = memref.get_global @matA_unsigned : memref<4x8xui8>
+  %b_unsigned = memref.get_global @matB_unsigned : memref<8x4xui8>
   
   // Allocate accumulators
   %c1 = memref.alloc() : memref<4x4xi32>
@@ -48,15 +68,15 @@ func.func @main() -> i32 {
   
   // vmadotu: unsigned × unsigned (same bit pattern, interpreted as unsigned)
   // CHECK: ime.vmadotu
-  ime.vmadotu %c2, %a_signed, %b_signed : memref<4x4xi32>, memref<4x8xi8>, memref<8x4xi8>
+  ime.vmadotu %c2, %a_unsigned, %b_unsigned : memref<4x4xi32>, memref<4x8xui8>, memref<8x4xui8>
   
   // vmadotsu: signed × unsigned  
   // CHECK: ime.vmadotsu
-  ime.vmadotsu %c3, %a_signed, %b_signed : memref<4x4xi32>, memref<4x8xi8>, memref<8x4xi8>
+  ime.vmadotsu %c3, %a_signed, %b_unsigned : memref<4x4xi32>, memref<4x8xi8>, memref<8x4xui8>
   
   // vmadotus: unsigned × signed
   // CHECK: ime.vmadotus
-  ime.vmadotus %c4, %a_signed, %b_signed : memref<4x4xi32>, memref<4x8xi8>, memref<8x4xi8>
+  ime.vmadotus %c4, %a_unsigned, %b_signed : memref<4x4xi32>, memref<4x8xui8>, memref<8x4xi8>
   
   %ret = arith.constant 0 : i32
   return %ret : i32
